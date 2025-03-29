@@ -3,6 +3,7 @@ from asyncio import run
 from uuid import UUID, uuid4
 
 import asyncpg
+from asyncpg import Record
 from dotenv import load_dotenv
 from loguru import logger
 from pydantic import BaseModel
@@ -14,6 +15,13 @@ class User(BaseModel):
     age: int
 
 
+async def get_users(pool, page: int, limit: int) -> list[User]:
+    query = "select * from users ORDER BY name, age LIMIT $1 OFFSET $2"
+    async with pool.acquire() as c:
+        rows = await c.fetch(query, limit, page * limit)
+        users: list[User] = [User(**row) for row in rows]
+    return users
+
 
 async def main():
     load_dotenv()
@@ -21,7 +29,7 @@ async def main():
     logger.info(f'using {db_url=}')
 
     try:
-        pool = await asyncpg.create_pool(
+        pool: asyncpg.pool.Pool = await asyncpg.create_pool(
             db_url,
             min_size=5,
             max_size=10,
@@ -34,10 +42,9 @@ async def main():
         raise RuntimeError('meh...')
 
     async with pool.acquire() as c:
-        rows = await c.fetch("select * from users")
-        for r in rows:
-            print(r)
-        users: list[User] = [User(**row) for row in rows]
+        # rows: list[Record] = await c.fetch("select * from users")
+        # users: list[User] = [User(**row) for row in rows]
+        users = await get_users(pool, 2, 10)
 
     for u in users:
         print(u)
