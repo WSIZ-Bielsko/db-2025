@@ -9,7 +9,10 @@ from db_2025.basics.model import User
 """
 prompt:
 
-Using pydantic 2, and asyncpg (python) create a UserRepository class, taking pool in constructor arg, and allowing for full CRUD operations on the users table; relevant functions must return User objects, and select's should use `*` and not list columns; use python 3.12 (and avoid importing from `typing`). In the "get_all" method allow for pagination, while sorting by user.name
+Using pydantic 2, and asyncpg (python) create a UserRepository class, taking pool in constructor arg, 
+and allowing for full CRUD operations on the users table; relevant functions must return User objects, 
+and select's should use `*` and not list columns; use python 3.12 (and avoid importing from `typing`). 
+In the "get_all" method allow for pagination, while sorting by user.name
 
 class User(BaseModel):
     id: UUID

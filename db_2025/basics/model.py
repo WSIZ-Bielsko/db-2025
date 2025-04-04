@@ -7,3 +7,6 @@ class User(BaseModel):
     id: UUID
     name: str
     age: int
+
+
+# C R U D
