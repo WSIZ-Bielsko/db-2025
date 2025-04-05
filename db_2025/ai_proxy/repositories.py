@@ -8,7 +8,8 @@ Using pydantic 2, and asyncpg (python, postgres database) create repository clas
 and allowing for full CRUD operations on all relevant tables (which are just plurals of the class name); 
 relevant functions must return full objects, 
 and in the read operations select's should use * and not list columns; use python 3.12 (and avoid importing from typing). 
-In the "get_all" method allow for pagination, while sorting by the natural parameters for each of the classes; all id's in create operations should be created by the database
+In the "get_all" method allow for pagination, while sorting by the natural parameters for each of the classes; 
+all id's in create operations should be created by the database.
 
 
 
