@@ -52,6 +52,12 @@ class UserRepository:
             records = await connection.fetch(query, limit, offset)
             return [User(**record) for record in records]
 
+    async def get_user_count(self) -> int:
+        async with self.pool.acquire() as connection:
+            total = await connection.fetchval("SELECT COUNT(*) FROM users")
+            return total
+
+
     async def update(self, user_id: UUID, name: str | None = None, age: int | None = None) -> User | None:
         # Build the SET clause dynamically based on provided parameters
         updates = []

@@ -73,7 +73,7 @@ class ProviderRepository:
     async def get_all(self, limit: int = 10, offset: int = 0) -> list[Provider]:
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
-                "SELECT * FROM providers ORDER BY name LIMIT $1 OFFSET $2",
+                "SELECT * FROM ai.providers ORDER BY name LIMIT $1 OFFSET $2",
                 limit, offset
             )
             return [Provider(**row) for row in rows]
@@ -81,7 +81,7 @@ class ProviderRepository:
     async def update(self, id: UUID, name: str, url: str) -> Provider | None:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "UPDATE providers SET name = $2, url = $3 WHERE id = $1 RETURNING *",
+                "UPDATE ai.providers SET name = $2, url = $3 WHERE id = $1 RETURNING *",
                 id, name, url
             )
             return Provider(**row) if row else None
@@ -89,7 +89,7 @@ class ProviderRepository:
     async def delete(self, id: UUID) -> bool:
         async with self.pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM providers WHERE id = $1",
+                "DELETE FROM ai.providers WHERE id = $1",
                 id
             )
             return result != "DELETE 0"
@@ -101,7 +101,7 @@ class ModelRepository:
     async def create(self, name: str, description: str | None = None) -> Model:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "INSERT INTO models (name, description) VALUES ($1, $2) RETURNING *",
+                "INSERT INTO ai.models (name, description) VALUES ($1, $2) RETURNING *",
                 name, description
             )
             return Model(**row)
@@ -109,7 +109,7 @@ class ModelRepository:
     async def get_by_id(self, id: UUID) -> Model | None:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "SELECT * FROM models WHERE id = $1",
+                "SELECT * FROM ai.models WHERE id = $1",
                 id
             )
             return Model(**row) if row else None
@@ -117,7 +117,7 @@ class ModelRepository:
     async def get_all(self, limit: int = 10, offset: int = 0) -> list[Model]:
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
-                "SELECT * FROM models ORDER BY name LIMIT $1 OFFSET $2",
+                "SELECT * FROM ai.models ORDER BY name LIMIT $1 OFFSET $2",
                 limit, offset
             )
             return [Model(**row) for row in rows]
@@ -125,7 +125,7 @@ class ModelRepository:
     async def update(self, id: UUID, name: str, description: str | None = None) -> Model | None:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "UPDATE models SET name = $2, description = $3 WHERE id = $1 RETURNING *",
+                "UPDATE ai.models SET name = $2, description = $3 WHERE id = $1 RETURNING *",
                 id, name, description
             )
             return Model(**row) if row else None
@@ -133,7 +133,7 @@ class ModelRepository:
     async def delete(self, id: UUID) -> bool:
         async with self.pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM models WHERE id = $1",
+                "DELETE FROM ai.models WHERE id = $1",
                 id
             )
             return result != "DELETE 0"
@@ -145,7 +145,7 @@ class UserRepository:
     async def create(self, name: str, active: bool) -> User:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "INSERT INTO users (name, active) VALUES ($1, $2) RETURNING *",
+                "INSERT INTO ai.users (name, active) VALUES ($1, $2) RETURNING *",
                 name, active
             )
             return User(**row)
@@ -153,7 +153,7 @@ class UserRepository:
     async def get_by_id(self, id: int) -> User | None:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "SELECT * FROM users WHERE id = $1",
+                "SELECT * FROM ai.users WHERE id = $1",
                 id
             )
             return User(**row) if row else None
@@ -161,7 +161,7 @@ class UserRepository:
     async def get_all(self, limit: int = 10, offset: int = 0) -> list[User]:
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
-                "SELECT * FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+                "SELECT * FROM ai.users ORDER BY created_at DESC LIMIT $1 OFFSET $2",
                 limit, offset
             )
             return [User(**row) for row in rows]
@@ -169,7 +169,7 @@ class UserRepository:
     async def update(self, id: int, name: str, active: bool) -> User | None:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "UPDATE users SET name = $2, active = $3 WHERE id = $1 RETURNING *",
+                "UPDATE ai.users SET name = $2, active = $3 WHERE id = $1 RETURNING *",
                 id, name, active
             )
             return User(**row) if row else None
@@ -177,7 +177,7 @@ class UserRepository:
     async def delete(self, id: int) -> bool:
         async with self.pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM users WHERE id = $1",
+                "DELETE FROM ai.users WHERE id = $1",
                 id
             )
             return result != "DELETE 0"
@@ -190,7 +190,7 @@ class KeyRepository:
                     cost_per_query: float) -> Key:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "INSERT INTO keys (api_key, model_id, provider_id, cost_per_query) "
+                "INSERT INTO ai.keys (api_key, model_id, provider_id, cost_per_query) "
                 "VALUES ($1, $2, $3, $4) RETURNING *",
                 api_key, model_id, provider_id, cost_per_query
             )
@@ -199,7 +199,7 @@ class KeyRepository:
     async def get_by_id(self, id: UUID) -> Key | None:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "SELECT * FROM keys WHERE id = $1",
+                "SELECT * FROM ai.keys WHERE id = $1",
                 id
             )
             return Key(**row) if row else None
@@ -207,7 +207,7 @@ class KeyRepository:
     async def get_all(self, limit: int = 10, offset: int = 0) -> list[Key]:
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
-                "SELECT * FROM keys ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+                "SELECT * FROM ai.keys ORDER BY created_at DESC LIMIT $1 OFFSET $2",
                 limit, offset
             )
             return [Key(**row) for row in rows]
@@ -216,7 +216,7 @@ class KeyRepository:
                     provider_id: UUID, cost_per_query: float) -> Key | None:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "UPDATE keys SET api_key = $2, model_id = $3, provider_id = $4, "
+                "UPDATE ai.keys SET api_key = $2, model_id = $3, provider_id = $4, "
                 "cost_per_query = $5 WHERE id = $1 RETURNING *",
                 id, api_key, model_id, provider_id, cost_per_query
             )
@@ -225,7 +225,7 @@ class KeyRepository:
     async def delete(self, id: UUID) -> bool:
         async with self.pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM keys WHERE id = $1",
+                "DELETE FROM ai.keys WHERE id = $1",
                 id
             )
             return result != "DELETE 0"
