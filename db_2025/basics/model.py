@@ -7,6 +7,7 @@ class User(BaseModel):
     id: UUID
     name: str
     age: int
+    active: bool = True
 
 
 # C R U D

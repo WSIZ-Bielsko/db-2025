@@ -1,10 +1,11 @@
 import os
 from asyncio import gather, create_task
 
+import pytest
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, PositiveInt, ValidationError
 from uuid import UUID
 import asyncpg
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,12 +19,14 @@ app = FastAPI()
 # Pydantic models for request/response validation
 class UserCreate(BaseModel):
     name: str
-    age: int
+    age: PositiveInt
+    active: bool = True
 
 
 class UserUpdate(BaseModel):
     name: str | None = None
     age: int | None = None
+    active: bool = True
 
 
 class PaginationParams(BaseModel):
@@ -87,7 +90,7 @@ async def health_check():
 # CRUD Endpoints
 @app.post("/users", response_model=UserModel)
 async def create_user(user: UserCreate):
-    created_user = await repo.create(user.name, user.age)
+    created_user = await repo.create(user.name, user.age, user.active)
     return created_user
 
 
@@ -113,7 +116,7 @@ async def get_all_users(limit: int = 10, offset: int = 0):
 
 @app.put("/users/{user_id}", response_model=UserModel)
 async def update_user(user_id: UUID, user: UserUpdate):
-    updated_user = await repo.update(user_id, user.name, user.age)
+    updated_user = await repo.update(user_id, user.name, user.age, user.active)
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found")
     return updated_user
@@ -126,6 +129,11 @@ async def delete_user(user_id: UUID):
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted successfully"}
 
+
+
+def test_user_age_positive():
+    with pytest.raises(ValidationError) as exc_info:
+        UserCreate(name="John Doe", age=-1)
 
 if __name__ == "__main__":
     import uvicorn

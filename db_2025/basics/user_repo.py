@@ -26,14 +26,14 @@ class UserRepository:
     def __init__(self, pool: asyncpg.Pool):
         self.pool = pool
 
-    async def create(self, name: str, age: int) -> User:
+    async def create(self, name: str, age: int, active: bool = True) -> User:
         query = """
-            INSERT INTO users (name, age)
-            VALUES ($1, $2)
+            INSERT INTO users (name, age, active)
+            VALUES ($1, $2, $3)
             RETURNING *
         """
         async with self.pool.acquire() as connection:
-            record = await connection.fetchrow(query, name, age)
+            record = await connection.fetchrow(query, name, age, active)
             return User(**record)
 
     async def get_by_id(self, user_id: UUID) -> User | None:
@@ -52,14 +52,10 @@ class UserRepository:
             records = await connection.fetch(query, limit, offset)
             return [User(**record) for record in records]
 
-    async def get_user_count(self) -> int:
-        async with self.pool.acquire() as connection:
-            total = await connection.fetchval("SELECT COUNT(*) FROM users")
-            return total
 
-
-    async def update(self, user_id: UUID, name: str | None = None, age: int | None = None) -> User | None:
+    async def update(self, user_id: UUID, name: str | None = None, age: int | None = None, active: bool | None = True) -> User | None:
         # Build the SET clause dynamically based on provided parameters
+        # todo: better --> just pass instance of User as arg
         updates = []
         params = [user_id]
         param_count = 2
@@ -71,6 +67,10 @@ class UserRepository:
         if age is not None:
             updates.append(f"age = ${param_count}")
             params.append(age)
+            param_count += 1
+        if active is not None:
+            updates.append(f"active = ${param_count}")
+            params.append(active)
 
         if not updates:
             return await self.get_by_id(user_id)
@@ -91,3 +91,10 @@ class UserRepository:
         async with self.pool.acquire() as connection:
             record = await connection.fetchrow(query, user_id)
             return bool(record)
+
+    # non-generated
+
+    async def get_user_count(self) -> int:
+        async with self.pool.acquire() as connection:
+            total = await connection.fetchval("SELECT COUNT(*) FROM users")
+            return total
