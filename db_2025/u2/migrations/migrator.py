@@ -4,14 +4,33 @@ from asyncpg import Pool
 from loguru import logger
 
 from db_2025.u2.common import get_db_connection_pool
-from db_2025.u2.migrations.migration_list import migrations_, get_migration_by_start_version
-from db_2025.u2.migrations.model import Migration, MigrationError
+from db_2025.u2.migrations.migration_list import migrations_example
+from db_2025.u2.migrations.model import MigrationError, Migration
 
 
 async def get_current_version(pool: Pool) -> int:
     async with pool.acquire() as conn:
         x = await conn.fetchval('SELECT version from up.version limit 1');
         return int(x)
+
+
+def get_migration_by_start_version(start_version: int, migrations: list[Migration]) -> Migration:
+    for m in migrations:
+        if m.start_version == start_version:
+            return m
+    else:
+        raise MigrationError(f'migration with {start_version=} does not exist')
+
+
+def get_migration_by_produces_version(produces_version: int, migrations: list[Migration]) -> Migration:
+    if produces_version == 1:
+        raise MigrationError(f'already at first migation')
+
+    for m in migrations:
+        if m.produces_version == produces_version:
+            return m
+    else:
+        raise MigrationError(f'migration with {produces_version=} does not exist')
 
 
 async def execute_migration(pool: Pool, m: Migration, up: bool = True):
@@ -34,9 +53,10 @@ async def execute_migration(pool: Pool, m: Migration, up: bool = True):
             raise MigrationError('start version of DB does not match')
         logger.info(f'Versions match; executing migration {m.start_version}->{m.produces_version}')
         async with pool.acquire() as conn:
-            await conn.execute(m.up_sql)
-            await conn.execute(
-                f'delete from up.version where true; insert into up.version(version) values ({m.produces_version})')
+            async with conn.transaction():
+                await conn.execute(m.up_sql)
+                await conn.execute(
+                    f'delete from up.version where true; insert into up.version(version) values ({m.produces_version})')
         logger.info('Migration completed')
 
     else:
@@ -45,12 +65,14 @@ async def execute_migration(pool: Pool, m: Migration, up: bool = True):
 
         logger.info(f'Versions match; executing migration {m.produces_version}->{m.start_version}')
         async with pool.acquire() as conn:
-            await conn.execute(m.down_sql)
-            await conn.execute(f'delete from up.version where true; insert into up.version(version) values ({m.start_version})')
+            async with conn.transaction():
+                await conn.execute(m.down_sql)
+                await conn.execute(
+                    f'delete from up.version where true; insert into up.version(version) values ({m.start_version})')
         logger.info('Migration completed')
 
 
-async def migrate_to(pool: Pool, final_migration_version: int):
+async def migrate_to(pool: Pool, final_migration_version: int, migrations: list[Migration]):
     """
     Start with current version; if final_migration_version > current_version, go up,
     else: go down.
@@ -82,26 +104,35 @@ async def migrate_to(pool: Pool, final_migration_version: int):
                 logger.info(f'Executed all migrations up to version {current_version}')
                 return
             try:
-                to_execute = get_migration_by_start_version(current_version)
+                to_execute = get_migration_by_start_version(current_version, migrations)
                 await execute_migration(pool, to_execute, up=True)
             except MigrationError:
                 logger.info(f'Executed all possible migrations; final version {current_version}')
                 return
 
     else:
-        #todo: your code here
-        pass
+        while True:
+            current_version = await get_current_version(pool)
+            if current_version == 1:
+                logger.info('Reached version=1 of the DB; exiting')
+                return
+            if current_version == final_migration_version:
+                logger.info(f'Reached version={current_version} of the DB; exiting')
+                return
+            try:
+                to_execute = get_migration_by_produces_version(produces_version=current_version,
+                                                               migrations=migrations)
+                await execute_migration(pool, to_execute, up=False)
+            except MigrationError:
+                logger.info(f'Executed all possible migrations; final version {current_version}')
+                return
+
 
 async def main():
     pool = await get_db_connection_pool()
-    logger.info('connection acquired')
-
     ver = await get_current_version(pool)
     logger.info(f'current version: {ver}')
-    # m1, m2 = migrations_
-    # await execute_migration(pool, m1, up=False)
-    # await execute_migration(pool, m2, up=False)
-    await migrate_to(pool, 2)
+    await migrate_to(pool, final_migration_version=1, migrations=migrations_example)
     logger.info('closing connection')
     await pool.close()
 
