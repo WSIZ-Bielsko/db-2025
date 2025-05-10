@@ -4,7 +4,7 @@ from asyncpg import Pool
 from loguru import logger
 
 from db_2025.u2.common import get_db_connection_pool
-from db_2025.u2.migrations.migration_list import migrations_example
+from db_2025.u2.migrations.example_migration_list import migrations_example
 from db_2025.u2.migrations.model import MigrationError, Migration
 
 
@@ -132,7 +132,7 @@ async def main():
     pool = await get_db_connection_pool()
     ver = await get_current_version(pool)
     logger.info(f'current version: {ver}')
-    await migrate_to(pool, final_migration_version=1, migrations=migrations_example)
+    await migrate_to(pool, final_migration_version=10, migrations=migrations_example)
     logger.info('closing connection')
     await pool.close()
 
