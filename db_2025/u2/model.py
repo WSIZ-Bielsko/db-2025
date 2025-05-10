@@ -15,7 +15,7 @@ class FileMeta(BaseModel):
     is_frozen: bool
 
 
-class Category:
+class Category(BaseModel):
     id: UUID
     name: str
     przedmiot_id: int | None

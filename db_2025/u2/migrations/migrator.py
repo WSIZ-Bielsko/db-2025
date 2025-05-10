@@ -4,13 +4,12 @@ from asyncpg import Pool
 from loguru import logger
 
 from db_2025.u2.common import get_db_connection_pool
-from db_2025.u2.migrations.example_migration_list import migrations_example
 from db_2025.u2.migrations.model import MigrationError, Migration
 
 
 async def get_current_version(pool: Pool) -> int:
     async with pool.acquire() as conn:
-        x = await conn.fetchval('SELECT version from up.version limit 1');
+        x = await conn.fetchval('SELECT version from version limit 1');
         return int(x)
 
 
@@ -56,7 +55,7 @@ async def execute_migration(pool: Pool, m: Migration, up: bool = True):
             async with conn.transaction():
                 await conn.execute(m.up_sql)
                 await conn.execute(
-                    f'delete from up.version where true; insert into up.version(version) values ({m.produces_version})')
+                    f'delete from version where true; insert into version(version) values ({m.produces_version})')
         logger.info('Migration completed')
 
     else:
@@ -68,7 +67,7 @@ async def execute_migration(pool: Pool, m: Migration, up: bool = True):
             async with conn.transaction():
                 await conn.execute(m.down_sql)
                 await conn.execute(
-                    f'delete from up.version where true; insert into up.version(version) values ({m.start_version})')
+                    f'delete from version where true; insert into version(version) values ({m.start_version})')
         logger.info('Migration completed')
 
 
@@ -132,7 +131,10 @@ async def main():
     pool = await get_db_connection_pool()
     ver = await get_current_version(pool)
     logger.info(f'current version: {ver}')
-    await migrate_to(pool, final_migration_version=10, migrations=migrations_example)
+
+    from db_2025.u2.uploader_migrations import migrations
+    await migrate_to(pool, final_migration_version=10, migrations=migrations)
+
     logger.info('closing connection')
     await pool.close()
 

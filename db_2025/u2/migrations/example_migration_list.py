@@ -29,6 +29,20 @@ migrations_example = [
 
     """,
         down_sql='drop table up.cats;',
+    ),
+    Migration(
+        start_version=3,
+        produces_version=4,
+        description='create association between files and categories',
+        up_sql="""
+        create table up.file_categories(
+            file_id uuid references up.files(id) on delete cascade ,
+            cat_id uuid references up.cats(id) on delete cascade,
+            unique (file_id,cat_id)
+        );
+        
+        """,
+        down_sql='drop table up.file_categories;',
     )
 ]
 
