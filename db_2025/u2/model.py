@@ -34,13 +34,3 @@ class Category(BaseModel):
     - is_public: visible to all users; else - only if student has given przedmiot_id (last 2sems)
 """
 
-
-# relations
-class FileCategory:
-    file_id: UUID
-    cat_id: UUID
-
-
-class FileAuthor:
-    file_id: UUID
-    author_id: int
