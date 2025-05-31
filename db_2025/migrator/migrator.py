@@ -1,5 +1,6 @@
 from asyncio import run
 
+import asyncpg
 from asyncpg import Pool
 from loguru import logger
 
@@ -9,8 +10,12 @@ from db_2025.u2.migrations.model import MigrationError, Migration
 
 async def get_current_version(pool: Pool) -> int:
     async with pool.acquire() as conn:
-        x = await conn.fetchval('SELECT version from version limit 1');
-        return int(x)
+        try:
+            x = await conn.fetchval('SELECT version from version limit 1;')
+            return int(x)
+        except asyncpg.exceptions.UndefinedTableError:
+            await conn.execute("create table version(version int); insert into version(version) values (1);")
+            return 1
 
 
 def get_migration_by_start_version(start_version: int, migrations: list[Migration]) -> Migration:

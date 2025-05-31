@@ -22,6 +22,7 @@ class Sentence(BaseModel):
     main_type: str  # (declarative, interrogative, imperative, exclamatory)
     exact_type: str  # eg: Noun Clause Sentences
     tense: str
+    verbatim: str
 
 
 class Word(BaseModel):
