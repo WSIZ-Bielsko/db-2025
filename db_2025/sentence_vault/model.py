@@ -17,11 +17,11 @@ class BookCategories(BaseModel):
 
 
 class Sentence(BaseModel):
-    id: int
+    id: int = -1
     book_id: int
-    main_type: str  # (declarative, interrogative, imperative, exclamatory)
-    exact_type: str  # eg: Noun Clause Sentences
-    tense: str
+    main_type: str = 'N/A'  # (declarative, interrogative, imperative, exclamatory)
+    exact_type: str = 'N/A' # eg: Noun Clause Sentences
+    tense: str = 'N/A'
     verbatim: str
 
 
@@ -38,4 +38,4 @@ class NLTK_Tokens(BaseModel):
 
 class SentenceWords(BaseModel):
     sentence_id: int
-    verb_id: int
+    word_id: int

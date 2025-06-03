@@ -15,7 +15,7 @@ async def main():
     ver = await get_current_version(pool)
     logger.info(f'current version: {ver}')
 
-    await migrate_to(pool, final_migration_version=2, migrations=migrations)
+    await migrate_to(pool, final_migration_version=6, migrations=migrations)
 
     logger.info('closing connection')
     await pool.close()

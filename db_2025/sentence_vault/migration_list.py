@@ -95,6 +95,24 @@ DROP INDEX IF EXISTS idx_words_nltk_token;
         
         """,
     ),
+    Migration(start_version=2, produces_version=3, description='add column sentence.verbatim', up_sql="""
+    ALTER TABLE sentences ADD COLUMN verbatim TEXT not null;
+    """, down_sql="""
+    ALTER TABLE sentences DROP COLUMN verbatim;
+                  """),
+    Migration(start_version=3, produces_version=4, description='rename column verb_id to word_id', up_sql="""
+    ALTER TABLE sentence_words RENAME COLUMN verb_id TO word_id;
+    """, down_sql="""
+    ALTER TABLE sentence_words RENAME COLUMN word_id TO verb_id;"""),
+    Migration(start_version=4, produces_version=5, description='add nltk tokens',
+              up_sql="""
+INSERT INTO nltk_tokens (token, description) VALUES ('CC', 'Coordinating conjunction'), ('CD', 'Cardinal number'), ('DT', 'Determiner'), ('EX', 'Existential there'), ('FW', 'Foreign word'), ('IN', 'Preposition or subordinating conjunction'), ('JJ', 'Adjective'), ('JJR', 'Adjective, comparative'), ('JJS', 'Adjective, superlative'), ('LS', 'List item marker'), ('MD', 'Modal'), ('NN', 'Noun, singular or mass'), ('NNS', 'Noun, plural'), ('NNP', 'Proper noun, singular'), ('NNPS', 'Proper noun, plural'), ('PDT', 'Predeterminer'), ('POS', 'Possessive ending'), ('PRP', 'Personal pronoun'), ('PRP$', 'Possessive pronoun'), ('RB', 'Adverb'), ('RBR', 'Adverb, comparative'), ('RBS', 'Adverb, superlative'), ('RP', 'Particle'), ('SYM', 'Symbol'), ('TO', '''to'''), ('UH', 'Interjection'), ('VB', 'Verb, base form'), ('VBD', 'Verb, past tense'), ('VBG', 'Verb, gerund or present participle'), ('VBN', 'Verb, past participle'), ('VBP', 'Verb, non-3rd person singular present'), ('VBZ', 'Verb, 3rd person singular present'), ('WDT', 'Wh-determiner'), ('WP', 'Wh-pronoun'), ('WP$', 'Possessive wh-pronoun'), ('WRB', 'Wh-adverb');
+              """,
+              down_sql='delete from nltk_tokens where true'),
+    Migration(start_version=5, produces_version=6, description='make words unique in word table',
+              up_sql="ALTER TABLE words ADD CONSTRAINT unique_word UNIQUE (word);",
+              down_sql="ALTER TABLE words DROP CONSTRAINT unique_word;"),
+
 
 ]
 
