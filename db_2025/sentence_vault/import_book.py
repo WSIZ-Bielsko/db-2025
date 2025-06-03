@@ -1,4 +1,5 @@
-from asyncio import run
+import asyncio
+from asyncio import run, create_task
 
 from asyncpg import UniqueViolationError
 from dotenv import load_dotenv
@@ -69,17 +70,19 @@ async def import_book(file_path: str):
     x = classify_sentences(sentences)
     types = ['declarative', 'imperative', 'interrogative', 'exclamatory']
     saved = 0
+    tasks = []
     for t in types:
         logger.info(f'processing {t}')
         for s in x[t]:
             stc = Sentence(book_id=1, main_type=t, verbatim=s)
-            await save_sentence(repo, stc)
+            tasks.append(create_task(save_sentence(repo, stc)))
             saved += 1
+        await asyncio.gather(*tasks)
     logger.info(f'saved {saved} sentences')
 
 
 async def main():
-    await import_book('/sobol/book_exp/book_small.txt')
+    await import_book('/sobol/book_exp/book1.txt')
 
 
 
