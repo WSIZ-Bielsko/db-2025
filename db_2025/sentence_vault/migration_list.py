@@ -96,11 +96,12 @@ DROP INDEX IF EXISTS idx_words_nltk_token;
         """,
     ),
     Migration(start_version=2, produces_version=3, description='add column sentence.verbatim', up_sql="""
-    ALTER TABLE sentences ADD COLUMN verbatim TEXT not null;
+    ALTER TABLE sentences ADD COLUMN verbatim TEXT not null default 'N/A';
     """, down_sql="""
     ALTER TABLE sentences DROP COLUMN verbatim;
                   """),
-    Migration(start_version=3, produces_version=4, description='rename column verb_id to word_id', up_sql="""
+    Migration(start_version=3, produces_version=4, description='rename column verb_id to word_id',
+              up_sql="""
     ALTER TABLE sentence_words RENAME COLUMN verb_id TO word_id;
     """, down_sql="""
     ALTER TABLE sentence_words RENAME COLUMN word_id TO verb_id;"""),

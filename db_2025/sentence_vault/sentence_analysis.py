@@ -195,7 +195,7 @@ def infer_tense(sentence: str) -> str:
 
 
 if __name__ == '__main__':
-    # setup_nltk() # run this function once upon installing nltk to download word data
+    setup_nltk() # run this function once upon installing nltk to download word data
 
     # Example usage
     test_sentences = [

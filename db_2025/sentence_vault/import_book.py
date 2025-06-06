@@ -6,10 +6,12 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from db_2025.common.db import get_db_connection_pool
+from db_2025.common.general import *
 from db_2025.sentence_vault.repo import Repo
 from db_2025.sentence_vault.model import *
 from db_2025.sentence_vault.sentence_analysis import extract_verbs, is_simple_declarative, infer_tense, extract_sentences, \
     classify_sentences
+
 
 
 async def save_sentence(repo: Repo, sentence: Sentence):
@@ -62,7 +64,7 @@ async def test_zero():
     await save_sentence(repo, stc)
 
 
-async def import_book(file_path: str):
+async def import_book(file_path: str, book_id=1):
     load_dotenv()
     pool = await get_db_connection_pool()
     repo = Repo(pool)
@@ -82,9 +84,11 @@ async def import_book(file_path: str):
 
 
 async def main():
-    await import_book('/sobol/book_exp/book1.txt')
-
-
+    st = ts()
+    DIR = '/nfs1/datasets/books_4'
+    # await import_book('/sobol/book_exp/book1.txt', 2)
+    await import_book(f'{DIR}/orphans-of-time-space.epub.txt', 4)
+    logger.info(f'imported book in {duration(st)}')
 
 if __name__ == '__main__':
     run(main())
