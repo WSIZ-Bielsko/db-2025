@@ -22,6 +22,45 @@ class Repo:
             logger.error(f"Non-query execution failed: {query}, Error: {str(e)}")
             raise
 
+    # Book CRUD
+    async def create_book(self, book: Book) -> Book:
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "INSERT INTO books (title) VALUES ($1) RETURNING *",
+                book.title
+            )
+            return Book(**row)
+
+    async def get_book(self, id: int) -> Book | None:
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT * FROM books WHERE id = $1", id)
+            return Book(**row) if row else None
+
+    async def get_all_books(self, offset: int = 0, limit: int = 10) -> list[Book]:
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(
+                "SELECT * FROM books ORDER BY title OFFSET $1 LIMIT $2",
+                offset, limit
+            )
+            return [Book(**row) for row in rows]
+
+    async def get_books_count(self) -> int:
+        async with self.pool.acquire() as conn:
+            return await conn.fetchval("SELECT COUNT(*) FROM books")
+
+    async def update_book(self, book: Book) -> Book | None:
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "UPDATE books SET title = $1 WHERE id = $2 RETURNING *",
+                book.title, book.id
+            )
+            return Book(**row) if row else None
+
+    async def delete_book(self, id: int) -> bool:
+        async with self.pool.acquire() as conn:
+            result = await conn.execute("DELETE FROM books WHERE id = $1", id)
+            return result != "DELETE 0"
+
     # Sentence CRUD Operations
     async def create_sentence(self, sentence: Sentence) -> Sentence:
         query = """
@@ -197,3 +236,9 @@ class Repo:
         async with self.pool.acquire() as conn:
             records = await self._execute_query(conn, query, sentence_verbatim)
             return Sentence(**records[0]) if records else None
+
+    async def get_book_by_title(self, title: str) -> Book | None:
+        query = "SELECT * FROM books WHERE title = $1"
+        async with self.pool.acquire() as conn:
+            records = await self._execute_query(conn, query, title)
+            return Book(**records[0]) if records else None

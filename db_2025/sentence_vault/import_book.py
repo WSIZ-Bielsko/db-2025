@@ -64,30 +64,37 @@ async def test_zero():
     await save_sentence(repo, stc)
 
 
-async def import_book(file_path: str, book_id=1):
-    load_dotenv()
+async def import_book(file_name: str, file_path: str):
+    # todo: check if book imported (by title)
+    #  - if yes -- skip import
+    #  - if no  -- save to books, then have book_id; import whole book
     pool = await get_db_connection_pool()
     repo = Repo(pool)
-    sentences = extract_sentences(file_path)
-    x = classify_sentences(sentences)
-    types = ['declarative', 'imperative', 'interrogative', 'exclamatory']
-    saved = 0
-    tasks = []
-    for t in types:
-        logger.info(f'processing {t}')
-        for s in x[t]:
-            stc = Sentence(book_id=1, main_type=t, verbatim=s)
-            tasks.append(create_task(save_sentence(repo, stc)))
-            saved += 1
-        await asyncio.gather(*tasks)
-    logger.info(f'saved {saved} sentences')
+
+    book = await repo.get_book_by_title(title=file_name)
+    print(book)
+
+    # sentences = extract_sentences(file_path)
+    # x = classify_sentences(sentences)
+    # types = ['declarative', 'imperative', 'interrogative', 'exclamatory']
+    # saved = 0
+    # tasks = []
+    # for t in types:
+    #     logger.info(f'processing {t}')
+    #     for s in x[t]:
+    #         stc = Sentence(book_id=1, main_type=t, verbatim=s)
+    #         tasks.append(create_task(save_sentence(repo, stc)))
+    #         saved += 1
+    #     await asyncio.gather(*tasks)
+    # logger.info(f'saved {saved} sentences')
 
 
 async def main():
+    load_dotenv()
     st = ts()
     DIR = '/nfs1/datasets/books_4'
-    # await import_book('/sobol/book_exp/book1.txt', 2)
-    await import_book(f'{DIR}/orphans-of-time-space.epub.txt', 4)
+    # await import_book(f'{DIR}/orphans-of-time-space.epub.txt', 4)
+    await import_book(file_name="psychology-for-social-workers.epub.txt", file_path=DIR)
     logger.info(f'imported book in {duration(st)}')
 
 if __name__ == '__main__':
