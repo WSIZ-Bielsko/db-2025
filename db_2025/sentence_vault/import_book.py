@@ -1,4 +1,6 @@
 import asyncio
+import os
+import sys
 from asyncio import run, create_task
 
 from asyncpg import UniqueViolationError
@@ -11,7 +13,6 @@ from db_2025.sentence_vault.repo import Repo
 from db_2025.sentence_vault.model import *
 from db_2025.sentence_vault.sentence_analysis import extract_verbs, is_simple_declarative, infer_tense, extract_sentences, \
     classify_sentences
-
 
 
 async def save_sentence(repo: Repo, sentence: Sentence):
@@ -64,38 +65,58 @@ async def test_zero():
     await save_sentence(repo, stc)
 
 
-async def import_book(file_name: str, file_path: str):
+async def import_book(pool, file_name: str, file_path: str):
     # todo: check if book imported (by title)
     #  - if yes -- skip import
     #  - if no  -- save to books, then have book_id; import whole book
-    pool = await get_db_connection_pool()
+
+    full_path = os.path.join(file_path, file_name)
+    if not os.path.isfile(full_path):
+        logger.warning('book {file_name} not found.')
+        return
+
     repo = Repo(pool)
 
     book = await repo.get_book_by_title(title=file_name)
-    print(book)
+    if not book:
+        book = Book(id=-1, title=file_name)
+        book = await repo.create_book(book)
+    else:
+        logger.info(f'book {book.id} already exists')
+        return
 
-    # sentences = extract_sentences(file_path)
-    # x = classify_sentences(sentences)
-    # types = ['declarative', 'imperative', 'interrogative', 'exclamatory']
-    # saved = 0
-    # tasks = []
-    # for t in types:
-    #     logger.info(f'processing {t}')
-    #     for s in x[t]:
-    #         stc = Sentence(book_id=1, main_type=t, verbatim=s)
-    #         tasks.append(create_task(save_sentence(repo, stc)))
-    #         saved += 1
-    #     await asyncio.gather(*tasks)
-    # logger.info(f'saved {saved} sentences')
-
+    sentences = extract_sentences(full_path)
+    x = classify_sentences(sentences)
+    types = ['declarative', 'imperative', 'interrogative', 'exclamatory']
+    saved = 0
+    tasks = []
+    for t in types:
+        logger.info(f'processing {t}')
+        for s in x[t]:
+            stc = Sentence(book_id=book.id, main_type=t, verbatim=s)
+            tasks.append(create_task(save_sentence(repo, stc)))
+            saved += 1
+        await asyncio.gather(*tasks)
+    logger.info(f'saved {saved} sentences')
 
 async def main():
     load_dotenv()
     st = ts()
-    DIR = '/nfs1/datasets/books_4'
-    # await import_book(f'{DIR}/orphans-of-time-space.epub.txt', 4)
-    await import_book(file_name="psychology-for-social-workers.epub.txt", file_path=DIR)
+    logger.info(f'running {st}')
+    DIR = '/nfs1/datasets/books_first_1000'
+
+    pool = await get_db_connection_pool()
+
+    for filename in os.listdir(DIR):
+        logger.warning(f'processing {filename}')
+        await import_book(pool=pool, file_name=filename, file_path=DIR)
     logger.info(f'imported book in {duration(st)}')
 
+
+def adjust_logger():
+    logger.remove()  # Remove default handler
+    logger.add(sink=sys.stderr, level="INFO")  # Only log INFO, WARNING, ERROR, and above
+
 if __name__ == '__main__':
+    adjust_logger()
     run(main())

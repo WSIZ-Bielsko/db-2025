@@ -4,6 +4,28 @@ from loguru import logger
 from db_2025.sentence_vault.model import *
 
 
+"""
+AI prompt:
+
+Using pydantic 2, and asyncpg (python, postgres database) create a class Repo, taking connection pool in constructor arg, 
+with methods corresponding to full CRUD operations for each of the relevant database tables specified below. 
+For each of the data classes the database tables are named as plurals of the data class names. 
+
+Technically: 
+- there should be independent methods for each of the data classess,
+- relevant functions must return full objects, and should use union types as return types where needed,
+- in the read operations select's should use * and not list columns; 
+- code shoul use modern python, e.g. 3.12+, e.g. using union types and avoid importing from typing package, such as using Optional 
+- in the "get_all" method allow for pagination, while sorting by the natural parameters for each of the classes; 
+all id's in create operations should be created by the database.
+- update operations should take full objects as arguments
+- for the get operations, create also get_count methods
+- output code only
+
+(paste model.py here)
+
+"""
+
 class Repo:
     def __init__(self, pool: Pool):
         self.pool = pool
@@ -232,7 +254,7 @@ class Repo:
             return Word(**records[0]) if records else None
 
     async def get_sentence_by_verbatim(self, sentence_verbatim: str) -> Sentence | None:
-        query = "SELECT * FROM sentences WHERE verbatim = $1"
+        query = "SELECT * FROM sentences WHERE verbatim = $1 AND MD5(verbatim) = MD5($1);"
         async with self.pool.acquire() as conn:
             records = await self._execute_query(conn, query, sentence_verbatim)
             return Sentence(**records[0]) if records else None
