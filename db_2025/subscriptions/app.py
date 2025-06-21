@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from contextlib import asynccontextmanager
-from typing import List, Optional
+from typing import Optional
 import asyncpg
 import os
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ from db_2025.subscriptions.model import User, Plan, Invoice, ExtraService, Subsc
 Created with AI via prompt:
 
 create app.py with full api using fastapi library 
-and providing access to alll CRUD operations from the repo.py
+and providing access to all CRUD operations from the repo.py
 
 {contents of repo.py}
 
@@ -92,7 +92,7 @@ async def get_user(user_id: int, repo: Repo = Depends(get_repo)):
     return user
 
 
-@app.get("/users/", response_model=List[User])
+@app.get("/users/", response_model=list[User])
 async def get_all_users(
         limit: int = Query(10, ge=1, le=100),
         offset: int = Query(0, ge=0),
@@ -101,9 +101,10 @@ async def get_all_users(
     return await repo.get_all_users(limit, offset)
 
 
-@app.get("/users/count/", response_model=int)
+@app.get("/users/count/")
 async def get_users_count(repo: Repo = Depends(get_repo)):
-    return await repo.get_users_count()
+    count = await repo.get_users_count()
+    return {"count": count}
 
 
 @app.put("/users/{user_id}", response_model=User)
@@ -139,7 +140,7 @@ async def get_plan(plan_id: UUID, repo: Repo = Depends(get_repo)):
     return plan
 
 
-@app.get("/plans/", response_model=List[Plan])
+@app.get("/plans/", response_model=list[Plan])
 async def get_all_plans(
         limit: int = Query(10, ge=1, le=100),
         offset: int = Query(0, ge=0),
@@ -148,9 +149,10 @@ async def get_all_plans(
     return await repo.get_all_plans(limit, offset)
 
 
-@app.get("/plans/count/", response_model=int)
+@app.get("/plans/count/")
 async def get_plans_count(repo: Repo = Depends(get_repo)):
-    return await repo.get_plans_count()
+    count = await repo.get_plans_count()
+    return {"count": count}
 
 
 @app.put("/plans/{plan_id}", response_model=Plan)
@@ -186,7 +188,7 @@ async def get_invoice(invoice_id: UUID, repo: Repo = Depends(get_repo)):
     return invoice
 
 
-@app.get("/invoices/", response_model=List[Invoice])
+@app.get("/invoices/", response_model=list[Invoice])
 async def get_all_invoices(
         limit: int = Query(10, ge=1, le=100),
         offset: int = Query(0, ge=0),
@@ -195,9 +197,10 @@ async def get_all_invoices(
     return await repo.get_all_invoices(limit, offset)
 
 
-@app.get("/invoices/count/", response_model=int)
+@app.get("/invoices/count/")
 async def get_invoices_count(repo: Repo = Depends(get_repo)):
-    return await repo.get_invoices_count()
+    count = await repo.get_invoices_count()
+    return {"count": count}
 
 
 @app.put("/invoices/{invoice_id}", response_model=Invoice)
@@ -233,7 +236,7 @@ async def get_extra_service(service_id: UUID, repo: Repo = Depends(get_repo)):
     return service
 
 
-@app.get("/extra-services/", response_model=List[ExtraService])
+@app.get("/extra-services/", response_model=list[ExtraService])
 async def get_all_extra_services(
         limit: int = Query(10, ge=1, le=100),
         offset: int = Query(0, ge=0),
@@ -242,9 +245,10 @@ async def get_all_extra_services(
     return await repo.get_all_extra_services(limit, offset)
 
 
-@app.get("/extra-services/count/", response_model=int)
+@app.get("/extra-services/count/")
 async def get_extra_services_count(repo: Repo = Depends(get_repo)):
-    return await repo.get_extra_services_count()
+    count = await repo.get_extra_services_count()
+    return {"count": count}
 
 
 @app.put("/extra-services/{service_id}", response_model=ExtraService)
@@ -280,7 +284,7 @@ async def get_subscription(subscription_id: UUID, repo: Repo = Depends(get_repo)
     return subscription
 
 
-@app.get("/subscriptions/", response_model=List[Subscription])
+@app.get("/subscriptions/", response_model=list[Subscription])
 async def get_all_subscriptions(
         limit: int = Query(10, ge=1, le=100),
         offset: int = Query(0, ge=0),
@@ -289,9 +293,10 @@ async def get_all_subscriptions(
     return await repo.get_all_subscriptions(limit, offset)
 
 
-@app.get("/subscriptions/count/", response_model=int)
+@app.get("/subscriptions/count/")
 async def get_subscriptions_count(repo: Repo = Depends(get_repo)):
-    return await repo.get_subscriptions_count()
+    count = await repo.get_subscriptions_count()
+    return {"count": count}
 
 
 @app.put("/subscriptions/{subscription_id}", response_model=Subscription)

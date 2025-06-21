@@ -5,6 +5,19 @@ from dotenv import load_dotenv
 
 from db_2025.subscriptions.model import *
 
+"""
+AI generated repository, using prompt:
+
+Using pydantic 2, and asyncpg (python, postgres database) create repository class, taking pool in constructor arg,
+and allowing for full CRUD operations on all relevant tables (which are just plurals of the class name);
+relevant functions must return full objects,
+and in the read operations select's should use * and not list columns; use python 3.12 
+(and avoid importing from typing package, such as using Optional).
+In the "get_all" method allow for pagination, while sorting by the natural parameters for each of the classes;
+all id's in create operations should be created by the database. For all tables, create also
+a count method, returning the number of rows in the table.
+
+"""
 
 class Repo:
     def __init__(self, pool: asyncpg.Pool):
