@@ -66,16 +66,13 @@ async def test_zero():
 
 
 async def import_book(pool, file_name: str, file_path: str):
-    # todo: check if book imported (by title)
-    #  - if yes -- skip import
-    #  - if no  -- save to books, then have book_id; import whole book
-
     full_path = os.path.join(file_path, file_name)
     if not os.path.isfile(full_path):
         logger.warning('book {file_name} not found.')
         return
 
     repo = Repo(pool)
+    start_ts = ts()
 
     book = await repo.get_book_by_title(title=file_name)
     if not book:
@@ -97,7 +94,9 @@ async def import_book(pool, file_name: str, file_path: str):
             tasks.append(create_task(save_sentence(repo, stc)))
             saved += 1
         await asyncio.gather(*tasks)
-    logger.info(f'saved {saved} sentences')
+    duration_s = ts() - start_ts
+    logger.info(f'saved {saved} sentences in {duration(start_ts)} ({duration_s/saved * 1000:.2f}sec/1k sentences);')
+
 
 async def main():
     load_dotenv()
@@ -106,8 +105,12 @@ async def main():
     DIR = '/nfs1/datasets/books_first_1000'
 
     pool = await get_db_connection_pool()
+    MAX_BOOKS = 500
 
-    for filename in os.listdir(DIR):
+    for idx, filename in enumerate(os.listdir(DIR)):
+        if idx >= MAX_BOOKS:
+            logger.info(f'processed {MAX_BOOKS} books')
+            break
         logger.warning(f'processing {filename}')
         await import_book(pool=pool, file_name=filename, file_path=DIR)
     logger.info(f'imported book in {duration(st)}')
@@ -116,6 +119,7 @@ async def main():
 def adjust_logger():
     logger.remove()  # Remove default handler
     logger.add(sink=sys.stderr, level="INFO")  # Only log INFO, WARNING, ERROR, and above
+
 
 if __name__ == '__main__':
     adjust_logger()

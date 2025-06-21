@@ -1,8 +1,8 @@
 from asyncpg import Pool, Connection
 from loguru import logger
 
+from db_2025.common.general import ts
 from db_2025.sentence_vault.model import *
-
 
 """
 AI prompt:
@@ -26,13 +26,19 @@ all id's in create operations should be created by the database.
 
 """
 
+
 class Repo:
     def __init__(self, pool: Pool):
         self.pool = pool
 
     async def _execute_query(self, conn: Connection, query: str, *args):
         try:
-            return await conn.fetch(query, *args)
+            st = ts()
+            res = await conn.fetch(query, *args)
+            dur = ts() - st
+            logger.trace(f"Query execution time: {dur} seconds")
+            return res
+
         except Exception as e:
             # logger.error(f"Query execution failed: {query}, Error: {str(e)}")
             raise

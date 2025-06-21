@@ -24,6 +24,7 @@ class Sentence(BaseModel):
     tense: str = 'N/A'
     verbatim: str
 
+# tense = 'Present', 'Past', 'Future','Mixed or unclear'
 
 class Word(BaseModel):
     id: int
